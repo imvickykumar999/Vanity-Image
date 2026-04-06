@@ -3,7 +3,7 @@
 A Flask web app for generating vanity Tor onion addresses using `mkp224o`.
 This repository includes a Docker image published to Docker Hub.
 
-![ss](https://github.com/user-attachments/assets/a52ebdb3-dfea-465a-a4ee-a35ba0a96893)
+![ss](https://github.com/user-attachments/assets/e75e8f16-7935-4197-8d61-cdcfd1899c19)
 
 ## Docker Hub
 
