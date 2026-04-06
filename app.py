@@ -194,13 +194,13 @@ def generate():
     if not prefix:
         return jsonify({'success': False, 'error': 'No prefix provided'}), 400
 
-    if current_process and current_process.poll() is None:
+    if current_process and current_process.poll() is not None:
         return jsonify({'success': False, 'error': 'Already generating. Stop first.'}), 400
 
     current_prefix = prefix
-    os.chdir('/home/priyanka/projects/americangemexpo_blog/mkp224o')
+    os.makedirs(f'mkp224o/onions/{prefix}', exist_ok=True)
     cmd = ['./mkp224o', '-d', f'onions/{prefix}', prefix]
-    current_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, preexec_fn=os.setsid)
+    current_process = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, preexec_fn=os.setsid, cwd='mkp224o')
 
     time.sleep(0.2)
     if current_process.poll() is not None:
@@ -252,7 +252,7 @@ def download():
     if not prefix:
         return jsonify({'error': 'No prefix specified'}), 400
 
-    onions_dir = f'/home/priyanka/projects/americangemexpo_blog/mkp224o/onions/{prefix}'
+    onions_dir = f'mkp224o/onions/{prefix}'
     if not os.path.exists(onions_dir):
         return jsonify({'error': f'No folder found for prefix {prefix}'}), 404
 
