@@ -239,6 +239,71 @@ def index():
                 }
             }
 
+            async function fetchStatus() {
+                try {
+                    const response = await fetch('/status');
+                    const data = await response.json();
+                    
+                    if (data.prefix) {
+                        document.getElementById('keysCard').classList.remove('d-none');
+                        
+                        if (data.prefix !== currentPrefix) {
+                            currentPrefix = data.prefix;
+                            currentKnownKeysLength = -1;
+                            document.getElementById('keysPrefix').innerText = data.prefix;
+                        }
+                        
+                        if (data.keys.length !== currentKnownKeysLength) {
+                            currentKnownKeysLength = data.keys.length;
+                            const container = document.getElementById('generatedKeysContainer');
+                            if (data.keys.length === 0) {
+                                container.innerHTML = '<p class="text-muted mb-0">No addresses generated yet...</p>';
+                            } else {
+                                container.innerHTML = '<ul class="list-group">' + data.keys.map(k => `<li class="list-group-item"><code>${k}</code></li>`).join('') + '</ul>';
+                            }
+                            // Auto-scroll to bottom
+                            const keysCardBody = document.getElementById('keysCardBody');
+                            if (keysCardBody) {
+                                keysCardBody.scrollTop = keysCardBody.scrollHeight;
+                            }
+                        }
+                    } else {
+                        document.getElementById('keysCard').classList.add('d-none');
+                        currentKnownKeysLength = -1;
+                        currentPrefix = '';
+                    }
+
+                    if (data.generating) {
+                        updateStatus(`Prefix: <strong>${data.prefix}</strong><br>Estimated 50% time: <strong>${data.estimate}</strong><br>Generation in progress.`);
+                        document.getElementById('prefix').disabled = true;
+                        generateButton.disabled = true;
+                        downloadButton.disabled = true;
+                    } else {
+                        statusCard.classList.add('d-none');
+                        document.getElementById('prefix').disabled = false;
+                        generateButton.disabled = false;
+                        downloadButton.disabled = false;
+                    }
+
+                    return data.generating;
+                } catch (e) {
+                    console.error("Failed to fetch status:", e);
+                    return false;
+                }
+            }
+
+            function startPolling() {
+                if (!pollInterval) {
+                    pollInterval = setInterval(async () => {
+                        const isGenerating = await fetchStatus();
+                        if (!isGenerating) {
+                            clearInterval(pollInterval);
+                            pollInterval = null;
+                        }
+                    }, 2000);
+                }
+            }
+
             form.addEventListener('submit', async (event) => {
                 event.preventDefault();
                 const formData = new FormData(form);
@@ -256,6 +321,7 @@ def index():
                 }
 
                 showAlert('<strong>Generation process started.</strong>', 'success');
+                // resetting known list to force UI refresh for new form submit
                 currentKnownKeysLength = -1; 
                 await fetchStatus();
                 startPolling();
@@ -267,13 +333,15 @@ def index():
                 if (data.success) {
                     showAlert(`<strong>Stopped:</strong> ${data.message}`, 'warning');
                     await fetchStatus();
+                } else {
+                    showAlert(`<strong>Error:</strong> ${data.message}`, 'danger');
                 }
             });
 
             document.getElementById('downloadBtn').addEventListener('click', () => {
                 const prefix = document.getElementById('prefix').value || currentPrefix;
                 if (!prefix) {
-                    showAlert('Enter a prefix or generate one first', 'warning');
+                    showAlert('Enter a prefix first or generate an address', 'warning');
                     return;
                 }
                 window.location.href = `/download?prefix=${encodeURIComponent(prefix)}`;
@@ -281,7 +349,9 @@ def index():
 
             window.addEventListener('load', async () => {
                 const isGenerating = await fetchStatus();
-                if (isGenerating) startPolling();
+                if (isGenerating) {
+                    startPolling();
+                }
             });
         </script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -341,7 +411,8 @@ def status():
                 for item in os.listdir(onions_dir):
                     if item.endswith('.onion') and os.path.isdir(os.path.join(onions_dir, item)):
                         keys.append(item)
-            except Exception: pass
+            except Exception:
+                pass
 
     is_generating = current_process is not None and current_process.poll() is None
     elapsed = (time.time() - start_time) if (is_generating and start_time) else 0
