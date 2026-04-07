@@ -8,3 +8,4 @@ build.log
 *.swp
 .DS_Store
 *hs_ed25519_secret_key
+.env
