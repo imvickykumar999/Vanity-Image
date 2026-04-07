@@ -1,3 +1,8 @@
+
+git add .
+git commit -m "changes"
+git push
+
 docker stop onion-vanity
 docker rm onion-vanity
 
