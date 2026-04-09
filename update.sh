@@ -1,6 +1,6 @@
 
 git add .
-git commit -m "css changes"
+git commit -m "UI Updated"
 git push
 
 docker stop onion-vanity
@@ -13,3 +13,4 @@ docker pull imvickykumar999/onion-vanity:latest
 docker run -d --name onion-vanity -p 2000:2000 imvickykumar999/onion-vanity:latest
 
 docker logs -f onion-vanity
+systemctl restart youtube-stream.service

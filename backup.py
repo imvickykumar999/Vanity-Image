@@ -457,7 +457,13 @@ def index():
                         }
                         
                         if (data.keys.length !== currentKnownKeysLength) {
+                            const isNewKeyDuringGeneration = currentKnownKeysLength !== -1;
                             currentKnownKeysLength = data.keys.length;
+                            
+                            if (data.generating && isNewKeyDuringGeneration && data.keys.length > 0 && data.estimate_seconds) {
+                                startCountdown(data.estimate_seconds, data.elapsed_seconds);
+                            }
+                            
                             const container = document.getElementById('generatedKeysContainer');
                             const modalContainer = document.getElementById('modalKeysContainer');
                             if (data.keys.length === 0) {
@@ -629,6 +635,7 @@ def status():
     global current_process, current_prefix, start_time
     
     keys = []
+    base_time = start_time
     if current_prefix:
         onions_dir = f'mkp224o/onions/{current_prefix}'
         if os.path.exists(onions_dir):
@@ -640,10 +647,13 @@ def status():
                         items_with_mtime.append((item, os.path.getmtime(item_path)))
                 items_with_mtime.sort(key=lambda x: x[1], reverse=True)
                 keys = [k[0] for k in items_with_mtime]
+                
+                if items_with_mtime and start_time and items_with_mtime[0][1] > start_time:
+                    base_time = items_with_mtime[0][1]
             except Exception: pass
 
     is_generating = current_process is not None and current_process.poll() is None
-    elapsed = (time.time() - start_time) if (is_generating and start_time) else 0
+    elapsed = (time.time() - base_time) if (is_generating and base_time) else 0
     raw_est = get_raw_estimate(current_prefix) if current_prefix else None
 
     return jsonify({
