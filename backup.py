@@ -340,9 +340,12 @@ def index():
                     </div>
 
                     <div id="keysCard" class="glass-card p-4 p-xl-5 d-none flex-column" style="display: flex; flex: 1; min-height: 0; overflow: hidden;">
-                        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3">
-                            <h3 class="card-title fw-bold mb-0">Generated Keys</h3>
-                            <span class="badge bg-success bg-opacity-25 text-success fs-5 px-4 py-2 rounded-pill border border-success border-opacity-50" id="keysPrefixBadge"></span>
+                        <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 border-bottom border-secondary border-opacity-25 pb-3 gap-3">
+                            <h3 class="card-title fw-bold mb-0 fs-4 fs-sm-3">Generated Keys</h3>
+                            <div class="d-flex flex-wrap align-items-center gap-2">
+                                <button type="button" class="btn btn-outline-info btn-sm rounded-pill px-3 fw-bold flex-shrink-0" data-bs-toggle="modal" data-bs-target="#keysModal" id="viewAllBtn">View All</button>
+                                <span class="badge bg-success bg-opacity-25 text-success fs-6 fs-sm-5 px-3 py-2 rounded-pill border border-success border-opacity-50 text-wrap text-break" id="keysPrefixBadge" style="max-width: 100%; word-break: break-all;"></span>
+                            </div>
                         </div>
                         <div class="keys-scroll mt-3 w-100" id="keysCardBody" style="flex: 1; min-height: 0; overflow-y: auto;">
                             <div id="generatedKeysContainer"></div>
@@ -356,6 +359,26 @@ def index():
                         </svg>
                         <h4 class="text-white fw-bold">System Idle</h4>
                         <p class="text-white-50 mb-0 fs-5">Enter a prefix to begin mining operations.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modal for All Generated URLs -->
+        <div class="modal fade" id="keysModal" tabindex="-1" aria-labelledby="keysModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content" style="background: rgba(30, 30, 50, 0.95); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); color: #fff;">
+                    <div class="modal-header border-bottom border-secondary border-opacity-25">
+                        <h5 class="modal-title font-monospace text-info fw-bold" id="keysModalLabel">All Generated Addresses</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body p-4" style="background: rgba(0, 0, 0, 0.2);">
+                        <div id="modalKeysContainer" class="d-flex flex-column gap-2" style="font-family: 'Courier New', monospace; word-break: break-all;">
+                            <div class="text-white-50 text-center py-3">No keys generated yet.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top border-secondary border-opacity-25">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
                     </div>
                 </div>
             </div>
@@ -436,10 +459,22 @@ def index():
                         if (data.keys.length !== currentKnownKeysLength) {
                             currentKnownKeysLength = data.keys.length;
                             const container = document.getElementById('generatedKeysContainer');
+                            const modalContainer = document.getElementById('modalKeysContainer');
                             if (data.keys.length === 0) {
                                 container.innerHTML = '<div class="d-flex h-100 align-items-center justify-content-center pt-4 pb-4"><div class="spinner-grow text-info me-3" role="status"></div><span class="text-white-50 fs-5 font-monospace">Searching blocks...</span></div>';
+                                modalContainer.innerHTML = '<div class="text-white-50 text-center py-3">No keys generated yet.</div>';
+                                document.getElementById('viewAllBtn').innerHTML = 'View All';
                             } else {
-                                container.innerHTML = '<div class="list-group list-group-flush gap-2"><div class="list-group-item d-flex justify-content-between align-items-center shadow-sm"><code>' + data.keys[0] + '</code> <span class="badge bg-success bg-opacity-75 rounded-pill">Latest</span></div></div>';
+                                container.innerHTML = '<div class="list-group list-group-flush gap-2"><div class="list-group-item d-flex flex-wrap justify-content-between align-items-center shadow-sm gap-2"><code style="word-break: break-all;">' + data.keys[0] + '</code> <span class="badge bg-success bg-opacity-75 rounded-pill flex-shrink-0">Latest</span></div></div>';
+                                modalContainer.innerHTML = data.keys.map((key, index) => `
+                                    <div class="list-group-item d-flex flex-wrap justify-content-between align-items-center shadow-sm p-3 rounded gap-2" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.05); color: #e2e8f0;">
+                                        <code style="word-break: break-all;">${key}</code>
+                                        <div class="flex-shrink-0">
+                                            ${index === 0 ? '<span class="badge bg-success bg-opacity-75 rounded-pill">Latest</span>' : '<span class="text-white-50 small">#' + (data.keys.length - index) + '</span>'}
+                                        </div>
+                                    </div>
+                                `).join('');
+                                document.getElementById('viewAllBtn').innerHTML = `View All <span class="badge bg-info text-dark ms-1 rounded-pill">#${data.keys.length}</span>`;
                             }
                             const keysCardBody = document.getElementById('keysCardBody');
                             keysCardBody.scrollTop = keysCardBody.scrollHeight;
