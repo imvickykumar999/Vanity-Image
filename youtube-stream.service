@@ -1,0 +1,15 @@
+[Unit]
+Description=YouTube Live Stream Service
+After=network.target network-online.target
+
+[Service]
+Type=simple
+User=priyanka
+WorkingDirectory=/home/priyanka/projects/americangemexpo_blog
+ExecStart=/bin/bash /home/priyanka/projects/americangemexpo_blog/stream.sh
+Restart=always
+RestartSec=10
+Environment="PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
+
+[Install]
+WantedBy=multi-user.target
